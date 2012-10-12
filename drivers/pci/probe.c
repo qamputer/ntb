@@ -1625,7 +1625,7 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
 	 */
 	case PCIE_BUS_PERFORMANCE:
 	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
-	 * to be aware to the MPS of the destination.  To work around this,
+	 * to be aware of the MPS of the destination.  To work around this,
 	 * simply force the MPS of the entire system to the smallest possible.
 	 */
 	case PCIE_BUS_PEER2PEER:
