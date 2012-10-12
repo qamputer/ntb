@@ -1491,6 +1491,9 @@ static int pcie_find_smpss(struct pci_dev *dev, void *data)
 	if (!pci_is_pcie(dev))
 		return 0;
 
+	dev_dbg(&dev->dev, "Device MPS %d and MPSS %d\n",
+		pcie_get_mps(dev), 128 << dev->pcie_mpss);
+
 	/* For PCIE hotplug enabled slots not connected directly to a
 	 * PCI-E root port, there can be problems when hotplugging
 	 * devices.  This is due to the possibility of hotplugging a
@@ -1632,6 +1635,7 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
 		smpss = 0;
 		break;
 
+	case PCIE_BUS_WARN:
 	case PCIE_BUS_SAFE:
 		smpss = mpss;
 
@@ -1644,6 +1648,12 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
 		return;
 	}
 
+	if (pcie_bus_config == PCIE_BUS_WARN) {
+		if (smpss != mpss)
+			dev_info(&bus->dev, "Non-optimal PCI-E Bus MPS value of %d being used instead of %d.\n"
+				 "Please use the pci=pcie_bus_safe boot parameter for better performance.\n",
+				 128 << smpss, 128 << mpss);
+		return;
 	}
 
 	pcie_bus_configure_set(bus->self, &smpss);
