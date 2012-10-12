@@ -1614,21 +1614,36 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
 	if (!pci_is_pcie(bus->self))
 		return;
 
-	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
-		return;
-
+	switch (pcie_bus_config) {
+	/* The smpss is used to make the bus and all child devices have
+	 * a uniform value.  Setting the smpss is moot for
+	 * "Performance", since it will be determined dynamically based
+	 * on the max size of the parent device and the child device.
+	 * However, not setting the smpss can result in static code
+	 * analysis tools erroniously reporting an issue.  To avoid
+	 * this, set the smpss to 0.
+	 */
+	case PCIE_BUS_PERFORMANCE:
 	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
 	 * to be aware to the MPS of the destination.  To work around this,
 	 * simply force the MPS of the entire system to the smallest possible.
 	 */
-	if (pcie_bus_config == PCIE_BUS_PEER2PEER)
+	case PCIE_BUS_PEER2PEER:
 		smpss = 0;
+		break;
 
-	if (pcie_bus_config == PCIE_BUS_SAFE) {
+	case PCIE_BUS_SAFE:
 		smpss = mpss;
 
 		pcie_find_smpss(bus->self, &smpss);
 		pci_walk_bus(bus, pcie_find_smpss, &smpss);
+		break;
+
+	case PCIE_BUS_TUNE_OFF:
+	default:
+		return;
+	}
+
 	}
 
 	pcie_bus_configure_set(bus->self, &smpss);
